@@ -1,0 +1,70 @@
+version: 1
+description: "Cross-tenant checks and billing/operations rules for payments, invoices, shipments, audit"
+
+tables:
+  payments:
+    - name: payment_id_unique
+      rule: unique_key
+      column: payment_id
+      severity: ERROR
+
+    - name: payment_tenant_not_null
+      rule: null_check
+      column: organisation_id
+      severity: ERROR
+
+    - name: payment_amount_positive
+      rule: range_check
+      column: amount
+      parameters:
+        min: 0.01
+      severity: ERROR
+
+  invoices:
+    - name: invoice_id_unique
+      rule: unique_key
+      column: invoice_id
+      severity: ERROR
+
+    - name: invoice_tenant_not_null
+      rule: null_check
+      column: organisation_id
+      severity: ERROR
+
+    - name: invoice_cross_tenant_collision_check
+      rule: cross_tenant_check
+      tenant_column: organisation_id
+      parameters:
+        parent_table: orders
+        join_key: order_id
+      severity: CRITICAL
+      description: "Verifies invoice and its parent order belong to the same organisation_id. (Catches Bug 3)"
+
+  shipments:
+    - name: shipment_id_unique
+      rule: unique_key
+      column: shipment_id
+      severity: ERROR
+
+    - name: shipment_tenant_not_null
+      rule: null_check
+      column: organisation_id
+      severity: ERROR
+
+    - name: shipment_carrier_valid
+      rule: set_membership
+      column: carrier
+      parameters:
+        allowed_values: ["FedEx", "UPS", "DHL", "USPS"]
+      severity: WARNING
+
+  audit_logs:
+    - name: audit_log_id_unique
+      rule: unique_key
+      column: log_id
+      severity: ERROR
+
+    - name: audit_log_tenant_not_null
+      rule: null_check
+      column: organisation_id
+      severity: ERROR

@@ -1,0 +1,55 @@
+version: 1
+description: "Transactional data quality rules covering orders, order items, and reconciliations"
+
+tables:
+  orders:
+    - name: order_id_unique
+      rule: unique_key
+      column: order_id
+      severity: ERROR
+      description: "Deduplication key order_id must have zero duplicates. (Intentionally catches Bug 2)"
+
+    - name: order_tenant_not_null
+      rule: null_check
+      column: organisation_id
+      severity: ERROR
+
+    - name: order_amount_non_negative
+      rule: range_check
+      column: total_amount
+      parameters:
+        min: 0.00
+      severity: ERROR
+
+    - name: order_status_valid
+      rule: set_membership
+      column: status
+      parameters:
+        allowed_values: ["pending", "processing", "completed", "cancelled"]
+      severity: WARNING
+
+    - name: orders_reconcile_with_staging
+      rule: row_count_reconciliation
+      parameters:
+        target_table: staging_orders
+        threshold: 0
+      severity: ERROR
+      description: "Production orders must reconcile row counts with staging ingest table."
+
+  order_items:
+    - name: order_item_id_unique
+      rule: unique_key
+      column: item_id
+      severity: ERROR
+
+    - name: order_item_tenant_not_null
+      rule: null_check
+      column: organisation_id
+      severity: ERROR
+
+    - name: order_item_quantity_positive
+      rule: range_check
+      column: quantity
+      parameters:
+        min: 1
+      severity: ERROR

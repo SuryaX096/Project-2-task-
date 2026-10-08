@@ -1,0 +1,79 @@
+version: 1
+description: "Core entity quality rules for enterprise multi-tenant e-commerce platform"
+
+tables:
+  organisations:
+    - name: org_id_not_null
+      rule: null_check
+      column: organisation_id
+      severity: CRITICAL
+      description: "Organisation primary identifier must never be null."
+
+    - name: org_id_unique
+      rule: unique_key
+      column: organisation_id
+      severity: CRITICAL
+      description: "Organisation primary keys must be strictly unique."
+
+    - name: org_plan_tier_valid
+      rule: set_membership
+      column: plan_tier
+      parameters:
+        allowed_values: ["starter", "pro", "enterprise"]
+      severity: ERROR
+      description: "Plan tier must belong to recognized tiers."
+
+  users:
+    - name: user_tenant_not_null
+      rule: null_check
+      column: organisation_id
+      severity: ERROR
+
+    - name: user_id_unique
+      rule: unique_key
+      column: user_id
+      severity: ERROR
+
+    - name: user_role_valid
+      rule: set_membership
+      column: role
+      parameters:
+        allowed_values: ["admin", "analyst", "viewer"]
+      severity: WARNING
+
+  products:
+    - name: product_tenant_not_null
+      rule: null_check
+      column: organisation_id
+      severity: ERROR
+      description: "Ensures every product is bounded to an organisation. (Intentionally catches Bug 1)"
+
+    - name: product_id_unique
+      rule: unique_key
+      column: product_id
+      severity: ERROR
+
+    - name: product_price_positive
+      rule: range_check
+      column: price
+      parameters:
+        min: 0.01
+      severity: ERROR
+
+    - name: product_stock_non_negative
+      rule: range_check
+      column: stock_quantity
+      parameters:
+        min: 0
+      severity: ERROR
+
+  customers:
+    - name: customer_tenant_not_null
+      rule: null_check
+      column: organisation_id
+      severity: ERROR
+
+    - name: customer_id_unique
+      rule: unique_key
+      column: customer_id
+      severity: ERROR
